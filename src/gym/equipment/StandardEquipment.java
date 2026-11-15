@@ -14,6 +14,7 @@ public class StandardEquipment extends Equipment {
 	public StandardEquipment(int id, String name, Service service, String iconName, DurationPolicy durationPolicy,
 			boolean requiresMemberInside) {
 		super(id, name, service, iconName, requiresMemberInside);
+
 		this.durationPolicy = Objects.requireNonNull(durationPolicy);
 	}
 

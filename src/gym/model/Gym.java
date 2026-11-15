@@ -39,16 +39,20 @@ public final class Gym {
 
 	public void addMember(Member member) {
 		Objects.requireNonNull(member);
+
 		if (plans.get(member.getPlan().getName()) != member.getPlan())
 			throw new IllegalArgumentException("Member plan must belong to this gym");
+
 		members.put(member.getId(), member);
 	}
 
 	public void addEquipment(Equipment item) {
 		Objects.requireNonNull(item);
+
 		Service registered = services.get(item.getService().getId());
 		if (registered == null || !registered.equals(item.getService()))
 			throw new IllegalArgumentException("Equipment service must belong to this gym");
+
 		equipment.put(item.getId(), item);
 	}
 
@@ -82,27 +86,33 @@ public final class Gym {
 
 	public synchronized AccessResult accessEquipment(int equipmentId, int memberId, LocalDateTime now) {
 		Objects.requireNonNull(now);
+
 		Equipment item = equipment.get(equipmentId);
 		if (item == null)
 			return AccessResult.denied("Unknown equipment");
+
 		Member member = members.get(memberId);
 		if (member == null)
 			return AccessResult.denied("Unknown member");
+
 		if (!item.isAvailable(member, now))
 			return AccessResult.denied("Equipment is busy or unavailable");
 		if (item.requiresMemberInside() && !member.isInside())
 			return AccessResult.denied("The member must be inside the gym");
 		if (member.isUsing(now))
 			return AccessResult.denied("The member is already using another service");
+
 		String memberFailure = item.memberValidationFailure(member);
 		if (memberFailure != null)
 			return AccessResult.denied(memberFailure);
 		PlanRule rule = member.getPlan().getRule(item.getService());
 		if (rule == null)
 			return AccessResult.denied("The service is not included in the member's plan");
+
 		ShowerContinuation showerContinuation = rule.getShowerContinuation().orElse(null);
 		boolean activatingShowerExtra = showerContinuation != null
 				&& member.canActivateShowerExtra(equipmentId, now);
+
 		Duration duration;
 		if (activatingShowerExtra) {
 			duration = member.getShowerExtraDuration(equipmentId, now);
@@ -114,10 +124,13 @@ public final class Gym {
 		}
 		if (duration.isZero() || duration.isNegative())
 			return AccessResult.denied("No valid duration is defined for this service");
+
 		PlanRule.Decision decision = member.checkPlan(item.getService(), now, duration);
 		if (!decision.isAllowed())
 			return AccessResult.denied(decision.getReason());
+
 		Duration actualDuration = item.occupy(member, now, duration);
+
 		if (activatingShowerExtra) {
 			member.activateShowerExtra(item.getName(), now);
 		} else {
@@ -127,6 +140,7 @@ public final class Gym {
 						showerContinuation);
 		}
 		item.completeUse(member);
+
 		return AccessResult.allowed(actualDuration);
 	}
 }

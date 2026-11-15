@@ -37,6 +37,7 @@ public interface PlanRule {
 		public static Decision deny(String reason) {
 			if (reason == null || reason.isBlank())
 				throw new IllegalArgumentException("A denial reason is required");
+
 			return new Decision(false, reason);
 		}
 

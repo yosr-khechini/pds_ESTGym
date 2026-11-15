@@ -66,7 +66,9 @@ public class GymWindow extends JFrame {
     public GymWindow(Gym gym) {
         super("ESTGym");
         this.gym = Objects.requireNonNull(gym);
+
         setupInterface();
+
         // Create the timer to update the buttons states
         new Timer(PERIODO_ATUALIZACAO_MS, e -> updateButtons()).start();
     }
@@ -91,6 +93,7 @@ public class GymWindow extends JFrame {
         if (botoes.containsKey(id)) {
             return; // already exists
         }
+
         Equipment equipment = gym.getEquipment(id);
         if (equipment == null)
             throw new IllegalArgumentException("Unknown equipment id: " + id);
@@ -137,14 +140,17 @@ public class GymWindow extends JFrame {
         Equipment equipment = gym.getEquipment(equipmentId);
         AccessResult result = gym.accessEquipment(equipmentId, member.getId());
         String message = result.getMessage();
+
         if (result.isAllowed()) {
             Duration duration = result.getDuration().orElse(Duration.ZERO);
             message = member.getName() + " may use " + equipment.getName() + " for "
                     + formatDuration(duration) + ".";
         }
+
         JOptionPane.showMessageDialog(source, message,
                 result.isAllowed() ? "Authorized usage" : "Unauthorized usage",
                 result.isAllowed() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+
         updateButtons();
         if (memberList.getSelectedValue() != null && memberList.getSelectedValue() == member.getId())
             updateTables(member.getId());
@@ -173,6 +179,7 @@ public class GymWindow extends JFrame {
         Member member = gym.getMember(id);
         if (member == null)
             JOptionPane.showMessageDialog(source, "Unknown id!", "Unknown member", JOptionPane.ERROR_MESSAGE);
+
         return member;
     }
 
@@ -232,11 +239,13 @@ public class GymWindow extends JFrame {
      */
     private void updateButtons() {
         LocalDateTime now = SimulatedClock.getCurrentTime();
+
         for (Map.Entry<Integer, JButton> e : botoes.entrySet()) {
             int equipmentId = e.getKey();
             JButton source = e.getValue();
 
             Equipment equipment = gym.getEquipment(equipmentId);
+
             boolean busy = equipment == null || equipment.isBusy(now);
             source.setEnabled(!busy);
             if (equipment != null)
@@ -248,8 +257,10 @@ public class GymWindow extends JFrame {
         long seconds = duration.getSeconds();
         if (seconds < 60)
             return seconds + " second(s)";
+
         long minutes = seconds / 60;
         long remainingSeconds = seconds % 60;
+
         return remainingSeconds == 0 ? minutes + " minute(s)"
                 : minutes + " minute(s) " + remainingSeconds + " second(s)";
     }
@@ -267,7 +278,6 @@ public class GymWindow extends JFrame {
         loadMembers();
 
         setMinimumSize(new Dimension(900, 700));
-
         setLocationRelativeTo(null);
     }
 
@@ -286,6 +296,7 @@ public class GymWindow extends JFrame {
                 updateTables(memberList.getSelectedValue());
             }
         });
+
         JScrollPane scrollLista = new JScrollPane(memberList);
         fixarLargura(scrollLista, MEMBER_LIST_WIDTH);
 
@@ -315,6 +326,7 @@ public class GymWindow extends JFrame {
         painel.add(Box.createHorizontalStrut(4));
         painel.add(colunaTabelas);
         painel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+
         return painel;
     }
 
@@ -341,6 +353,7 @@ public class GymWindow extends JFrame {
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setBorder(new TitledBorder("Equipamentos"));
         scroll.getVerticalScrollBar().setUnitIncrement(16);
+
         return scroll;
     }
 
@@ -355,11 +368,13 @@ public class GymWindow extends JFrame {
 
         BufferedImage destino = new BufferedImage(ICON_SIZE.width, ICON_SIZE.height,
                 BufferedImage.TYPE_INT_ARGB);
+
         g = destino.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g.drawImage(origem, 0, 0, ICON_SIZE.width, ICON_SIZE.height, null);
         g.dispose();
+
         return new ImageIcon(destino);
     }
 
@@ -427,13 +442,16 @@ public class GymWindow extends JFrame {
                     if (!c.isVisible()) {
                         continue;
                     }
+
                     Dimension d = c.getPreferredSize();
+
                     if (linhaW > 0 && linhaW + getHgap() + d.width > maxLinha) {
                         totalW = Math.max(totalW, linhaW);
                         totalH += linhaH + getVgap();
                         linhaW = 0;
                         linhaH = 0;
                     }
+
                     linhaW += (linhaW > 0 ? getHgap() : 0) + d.width;
                     linhaH = Math.max(linhaH, d.height);
                 }

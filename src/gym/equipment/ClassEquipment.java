@@ -30,6 +30,7 @@ public final class ClassEquipment extends Equipment {
 			throw new IllegalArgumentException("Class capacity must be positive");
 		if (classDuration.isNegative() || classDuration.isZero())
 			throw new IllegalArgumentException("Class duration must be positive");
+
 		this.level = level;
 		this.capacity = capacity;
 		this.classDuration = classDuration;
@@ -57,23 +58,29 @@ public final class ClassEquipment extends Equipment {
 	@Override
 	public boolean isAvailable(Member member, LocalDateTime now) {
 		refresh(now);
+
 		if (classEnd == null)
 			return true;
+
 		return participants.size() < capacity && !participants.contains(member.getId());
 	}
 
 	@Override
 	protected Optional<Duration> resolveDuration(Member member, LocalDateTime now) {
 		refresh(now);
+
 		return Optional.of(classEnd == null ? classDuration : Duration.between(now, classEnd));
 	}
 
 	@Override
 	protected Duration reserve(Member member, LocalDateTime now, Duration requestedDuration) {
 		refresh(now);
+
 		if (classEnd == null)
 			classEnd = now.plus(classDuration);
+
 		participants.add(member.getId());
+
 		return Duration.between(now, classEnd);
 	}
 

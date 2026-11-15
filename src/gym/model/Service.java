@@ -14,8 +14,10 @@ public final class Service {
 	public Service(String id, String name, int classLevel) {
 		this.id = Objects.requireNonNull(id);
 		this.name = Objects.requireNonNull(name);
+
 		if (classLevel < 0 || classLevel > 2)
 			throw new IllegalArgumentException("Class level must be between 0 and 2");
+
 		this.classLevel = classLevel;
 	}
 

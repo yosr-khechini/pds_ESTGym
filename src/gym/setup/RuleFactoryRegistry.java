@@ -23,9 +23,11 @@ final class RuleFactoryRegistry {
 
 	static PlanRule create(GymData.RuleDto dto, String context) {
 		String type = ConfigValidation.requireText(dto.type, context, "type");
+
 		RuleFactory factory = FACTORIES.get(type);
 		if (factory == null)
 			throw ConfigValidation.configurationError(context + " has unknown rule type '" + type + "'");
+
 		try {
 			return factory.create(dto, context + " rule '" + type + "'");
 		} catch (IllegalArgumentException e) {
@@ -39,6 +41,7 @@ final class RuleFactoryRegistry {
 
 	private static Map<String, RuleFactory> createFactories() {
 		Map<String, RuleFactory> factories = new LinkedHashMap<>();
+
 		factories.put("alwaysAllowed", (dto, context) -> PlanRules.alwaysAllowed());
 		factories.put("neverAllowed", (dto, context) ->
 				PlanRules.neverAllowed(ConfigValidation.requireText(
@@ -73,18 +76,23 @@ final class RuleFactoryRegistry {
 						minutes(dto, "extraMinutes", context)));
 		factories.put("allOf", (dto, context) -> composite(dto, context, true));
 		factories.put("anyOf", (dto, context) -> composite(dto, context, false));
+
 		return Map.copyOf(factories);
 	}
 
 	private static PlanRule composite(GymData.RuleDto dto, String context, boolean all) {
 		ConfigValidation.require(dto.rules, context, "rules");
+
 		if (dto.rules.isEmpty())
 			throw ConfigValidation.configurationError(context + " requires at least one nested rule");
+
 		PlanRule[] rules = new PlanRule[dto.rules.size()];
 		for (int index = 0; index < dto.rules.size(); index++) {
 			String nestedContext = context + " rules[" + index + "]";
+
 			rules[index] = create(ConfigValidation.require(dto.rules.get(index), nestedContext, "rule"), nestedContext);
 		}
+
 		return all ? PlanRules.allOf(rules) : PlanRules.anyOf(rules);
 	}
 
@@ -94,15 +102,19 @@ final class RuleFactoryRegistry {
 
 	private static String stringParameter(GymData.RuleDto dto, String field, String context) {
 		JsonElement value = parameter(dto, field, context);
+
 		if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString())
 			throw ConfigValidation.configurationError(context + " parameter '" + field + "' must be a string");
+
 		return value.getAsString();
 	}
 
 	private static long longParameter(GymData.RuleDto dto, String field, String context) {
 		JsonElement value = parameter(dto, field, context);
+
 		if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber())
 			throw ConfigValidation.configurationError(context + " parameter '" + field + "' must be an integer");
+
 		try {
 			return new BigDecimal(value.getAsString()).longValueExact();
 		} catch (NumberFormatException | ArithmeticException e) {
@@ -113,6 +125,7 @@ final class RuleFactoryRegistry {
 	private static int intParameter(GymData.RuleDto dto, String field, String context) {
 		try {
 			Integer value = Math.toIntExact(longParameter(dto, field, context));
+
 			return ConfigValidation.requireInt(value, context, field);
 		} catch (ArithmeticException e) {
 			throw ConfigValidation.configurationError(
@@ -122,8 +135,10 @@ final class RuleFactoryRegistry {
 
 	private static JsonElement parameter(GymData.RuleDto dto, String field, String context) {
 		JsonElement value = dto.parameters == null ? null : dto.parameters.get(field);
+
 		if (value == null || value.isJsonNull())
 			throw ConfigValidation.configurationError(context + " is missing required parameter '" + field + "'");
+
 		return value;
 	}
 }

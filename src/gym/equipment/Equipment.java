@@ -19,6 +19,7 @@ public abstract class Equipment {
 	protected Equipment(int id, String name, Service service, String iconName, boolean requiresMemberInside) {
 		if (id <= 0)
 			throw new IllegalArgumentException("Equipment id must be positive");
+
 		this.id = id;
 		this.name = Objects.requireNonNull(name);
 		this.service = Objects.requireNonNull(service);
@@ -73,6 +74,7 @@ public abstract class Equipment {
 
 	protected Duration reserve(Member member, LocalDateTime now, Duration requestedDuration) {
 		busyUntil = now.plus(requestedDuration);
+
 		return requestedDuration;
 	}
 

@@ -14,6 +14,7 @@ public final class DurationPolicies {
 		Objects.requireNonNull(duration);
 		if (duration.isNegative() || duration.isZero())
 			throw new IllegalArgumentException("Equipment duration must be positive");
+
 		return (member, service, now) -> Optional.of(duration);
 	}
 

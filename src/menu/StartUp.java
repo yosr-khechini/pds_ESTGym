@@ -29,14 +29,14 @@ public class StartUp {
 				String iconName = equipment.getIconName();
 				if (iconName == null || iconName.isBlank())
 					iconName = DEFAULT_ICON_NAME;
+
 				main.addEquipment(equipment.getId(), getIcons(iconName));
 			}
 
 			main.setVisible(true);
 			ClockDialog relog = new ClockDialog(main, new Point(200, 20));
 			relog.setVisible(true);
-
-		});
+			});
 	}
 
 	/**

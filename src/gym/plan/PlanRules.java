@@ -104,6 +104,7 @@ public final class PlanRules {
 		private MinutesAndDaysRule(long minutesPerDay, int daysPerWeek) {
 			if (minutesPerDay <= 0 || daysPerWeek <= 0 || daysPerWeek > 7)
 				throw new IllegalArgumentException("Invalid daily minutes or weekly days");
+
 			secondsPerDay = Math.multiplyExact(minutesPerDay, 60);
 			this.daysPerWeek = daysPerWeek;
 		}
@@ -112,11 +113,13 @@ public final class PlanRules {
 		public Decision evaluate(Member member, Service service, LocalDateTime now, Duration requestedDuration) {
 			LocalDate date = now.toLocalDate();
 			long used = member.getUsedSecondsOn(service, date);
+
 			if (used + requestedDuration.getSeconds() > secondsPerDay)
 				return Decision.deny("Daily service time limit reached");
 			if (member.getUsageCount(service, Member.UsagePeriod.DAY, now) == 0
 					&& member.getUsageDaysInWeek(service, now) >= daysPerWeek)
 				return Decision.deny("Weekly service day limit reached");
+
 			return Decision.allow();
 		}
 
@@ -128,6 +131,7 @@ public final class PlanRules {
 		@Override
 		public Optional<Duration> getPlanDuration(Member member, Service service, LocalDateTime now) {
 			long remaining = secondsPerDay - member.getUsedSecondsOn(service, now.toLocalDate());
+
 			return Optional.of(Duration.ofSeconds(Math.max(0, remaining)));
 		}
 	}
@@ -139,6 +143,7 @@ public final class PlanRules {
 		private UsesLimitRule(long maximumUses, Member.UsagePeriod period) {
 			if (maximumUses < 0)
 				throw new IllegalArgumentException("Usage limit cannot be negative");
+
 			this.maximumUses = maximumUses;
 			this.period = period;
 		}
@@ -146,8 +151,10 @@ public final class PlanRules {
 		@Override
 		public Decision evaluate(Member member, Service service, LocalDateTime now, Duration requestedDuration) {
 			long uses = member.getUsageCount(service, period, now);
+
 			if (uses >= maximumUses)
 				return Decision.deny(period.name().toLowerCase(Locale.ROOT) + " use limit reached");
+
 			return Decision.allow();
 		}
 
@@ -163,6 +170,7 @@ public final class PlanRules {
 		private DaysPerWeekRule(int maximumDays) {
 			if (maximumDays <= 0 || maximumDays > 7)
 				throw new IllegalArgumentException("Weekly day limit must be between 1 and 7");
+
 			this.maximumDays = maximumDays;
 		}
 
@@ -171,6 +179,7 @@ public final class PlanRules {
 			if (member.getUsageCount(service, Member.UsagePeriod.DAY, now) == 0
 					&& member.getUsageDaysInWeek(service, now) >= maximumDays)
 				return Decision.deny("Weekly service day limit reached");
+
 			return Decision.allow();
 		}
 
@@ -189,6 +198,7 @@ public final class PlanRules {
 				throw new IllegalArgumentException("Class level must be 1 or 2");
 			if (maximumUses < 0)
 				throw new IllegalArgumentException("Usage limit cannot be negative");
+
 			this.classLevel = classLevel;
 			this.maximumUses = maximumUses;
 		}
@@ -197,6 +207,7 @@ public final class PlanRules {
 		public Decision evaluate(Member member, Service service, LocalDateTime now, Duration requestedDuration) {
 			if (member.getUsageCount(classLevel, Member.UsagePeriod.WEEK, now) >= maximumUses)
 				return Decision.deny("Weekly class use limit reached");
+
 			return Decision.allow();
 		}
 
@@ -212,14 +223,17 @@ public final class PlanRules {
 		private MinimumIntervalRule(Duration interval) {
 			if (interval.isNegative() || interval.isZero())
 				throw new IllegalArgumentException("Interval must be positive");
+
 			this.interval = interval;
 		}
 
 		@Override
 		public Decision evaluate(Member member, Service service, LocalDateTime now, Duration requestedDuration) {
 			LocalDateTime lastUse = member.getLastUse(service);
+
 			if (lastUse != null && now.isBefore(lastUse.plus(interval)))
 				return Decision.deny("Minimum interval between uses has not elapsed");
+
 			return Decision.allow();
 		}
 
@@ -235,14 +249,17 @@ public final class PlanRules {
 		private MonthsIntervalRule(int months) {
 			if (months <= 0)
 				throw new IllegalArgumentException("Months must be positive");
+
 			this.months = months;
 		}
 
 		@Override
 		public Decision evaluate(Member member, Service service, LocalDateTime now, Duration requestedDuration) {
 			LocalDateTime lastUse = member.getLastUse(service);
+
 			if (lastUse != null && now.isBefore(lastUse.plusMonths(months)))
 				return Decision.deny("This service is available once every " + months + " month(s)");
+
 			return Decision.allow();
 		}
 
@@ -258,6 +275,7 @@ public final class PlanRules {
 		private ClassLevelRule(int maximumLevel) {
 			if (maximumLevel < 0 || maximumLevel > 2)
 				throw new IllegalArgumentException("Maximum class level must be between 0 and 2");
+
 			this.maximumLevel = maximumLevel;
 		}
 
@@ -265,6 +283,7 @@ public final class PlanRules {
 		public Decision evaluate(Member member, Service service, LocalDateTime now, Duration requestedDuration) {
 			if (service.getClassLevel() == 0 || service.getClassLevel() > maximumLevel)
 				return Decision.deny("The member's plan does not include this class level");
+
 			return Decision.allow();
 		}
 
@@ -283,6 +302,7 @@ public final class PlanRules {
 			if (initialDuration.isNegative() || initialDuration.isZero()
 					|| extraDuration.isNegative() || activationWindow.isNegative())
 				throw new IllegalArgumentException("Invalid shower duration");
+
 			this.initialDuration = initialDuration;
 			this.extraDuration = extraDuration;
 			this.activationWindow = activationWindow;
@@ -332,6 +352,7 @@ public final class PlanRules {
 		private ShowerUsesPerDayRule(long maximumUses, Duration initialDuration, Duration extraDuration) {
 			if (maximumUses < 0)
 				throw new IllegalArgumentException("Usage limit cannot be negative");
+
 			this.maximumUses = maximumUses;
 			this.initialDuration = initialDuration;
 			this.extraDuration = extraDuration;
@@ -350,8 +371,10 @@ public final class PlanRules {
 						return Decision.allow();
 				}
 			}
+
 			if (member.getUsageCount(service, Member.UsagePeriod.DAY, now) >= maximumUses)
 				return Decision.deny("Daily shower limit reached");
+
 			return Decision.allow();
 		}
 
@@ -368,6 +391,7 @@ public final class PlanRules {
 		private CompositeRule(boolean requireAll, PlanRule... rules) {
 			if (rules.length == 0)
 				throw new IllegalArgumentException("A composite rule needs at least one rule");
+
 			this.requireAll = requireAll;
 			this.rules = new ArrayList<>(Arrays.asList(rules));
 			if (this.rules.contains(null))
@@ -377,6 +401,7 @@ public final class PlanRules {
 		@Override
 		public Decision evaluate(Member member, Service service, LocalDateTime now, Duration requestedDuration) {
 			List<String> reasons = new ArrayList<>();
+
 			for (PlanRule rule : rules) {
 				Decision result = rule.evaluate(member, service, now, requestedDuration);
 				if (requireAll && !result.isAllowed())
@@ -385,26 +410,31 @@ public final class PlanRules {
 					return result;
 				reasons.add(result.getReason());
 			}
+
 			return requireAll ? Decision.allow() : Decision.deny(String.join("; ", reasons));
 		}
 
 		@Override
 		public String getDescription() {
 			List<String> descriptions = new ArrayList<>();
+
 			for (PlanRule rule : rules)
 				descriptions.add(rule.getDescription());
+
 			return String.join(requireAll ? " and " : " or ", descriptions);
 		}
 
 		@Override
 		public Optional<Duration> getPlanDuration(Member member, Service service, LocalDateTime now) {
 			Optional<Duration> shortest = Optional.empty();
+
 			for (PlanRule rule : rules) {
 				Optional<Duration> duration = rule.getPlanDuration(member, service, now);
 				if (duration.isPresent() && (!shortest.isPresent()
 						|| duration.get().compareTo(shortest.get()) < 0))
 					shortest = duration;
 			}
+
 			return shortest;
 		}
 
@@ -415,6 +445,7 @@ public final class PlanRules {
 				if (continuation.isPresent())
 					return continuation;
 			}
+
 			return Optional.empty();
 		}
 	}

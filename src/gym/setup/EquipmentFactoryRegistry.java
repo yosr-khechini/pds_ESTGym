@@ -42,9 +42,11 @@ final class EquipmentFactoryRegistry {
 
 	static Equipment create(GymData.EquipmentDto equipmentData, Service service, String errorContext) {
 		String type = requireText(equipmentData.type, errorContext, "type");
+
 		EquipmentFactory factory = FACTORIES.get(type);
 		if (factory == null)
 			throw configurationError(errorContext + " has unknown equipment type '" + type + "'");
+
 		return createWithErrorHandling(factory, equipmentData, service, errorContext);
 	}
 
@@ -53,6 +55,7 @@ final class EquipmentFactoryRegistry {
 		try {
 			requireText(equipmentData.iconName, errorContext, "iconName");
 			require(equipmentData.requiresInside, errorContext, "requiresInside");
+
 			return factory.create(equipmentData, service, errorContext);
 		} catch (IllegalArgumentException e) {
 			throw wrapFactoryError(errorContext, e);
@@ -66,6 +69,7 @@ final class EquipmentFactoryRegistry {
 				&& configurationError.getMessage() != null
 				&& configurationError.getMessage().startsWith("Gym configuration error:"))
 			return configurationError;
+
 		return configurationError(errorContext + ": " + error.getMessage(), error);
 	}
 
@@ -95,9 +99,11 @@ final class EquipmentFactoryRegistry {
 	private static DurationPolicy durationPolicy(GymData.EquipmentDto equipmentData, String errorContext) {
 		GymData.DurationDto duration = require(equipmentData.duration, errorContext, "duration");
 		String type = requireText(duration.type, errorContext + " duration", "type");
+
 		DurationFactory factory = DURATION_FACTORIES.get(type);
 		if (factory == null)
 			throw configurationError(errorContext + " has unknown duration type '" + type + "'");
+
 		return factory.create(equipmentData, errorContext + " duration");
 	}
 
@@ -113,9 +119,12 @@ final class EquipmentFactoryRegistry {
 	private static Duration fixedDuration(GymData.EquipmentDto equipmentData, String errorContext) {
 		GymData.DurationDto duration = require(equipmentData.duration, errorContext, "duration");
 		String type = requireText(duration.type, errorContext + " duration", "type");
+
 		if (!"fixed".equals(type))
 			throw configurationError(errorContext + " requires a fixed duration, not '" + type + "'");
+
 		Long seconds = require(duration.seconds, errorContext + " duration", "seconds");
+
 		return Duration.ofSeconds(seconds);
 	}
 }

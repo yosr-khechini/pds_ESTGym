@@ -33,6 +33,7 @@ public final class Member {
 	public Member(int id, String name, String cardId, GymPlan plan) {
 		if (id <= 0)
 			throw new IllegalArgumentException("Member id must be positive");
+
 		this.id = id;
 		this.name = Objects.requireNonNull(name);
 		this.cardId = Objects.requireNonNull(cardId);
@@ -83,6 +84,7 @@ public final class Member {
 		PlanRule rule = plan.getRule(service);
 		if (rule == null)
 			return PlanRule.Decision.deny("The service is not included in the member's plan");
+
 		return rule.evaluate(this, service, now, duration);
 	}
 
@@ -90,7 +92,9 @@ public final class Member {
 		Objects.requireNonNull(service);
 		Objects.requireNonNull(period);
 		Objects.requireNonNull(now);
+
 		ServiceUsage usage = existingUsage(service);
+
 		return switch (period) {
 			case DAY -> usage.usesByDay.getOrDefault(now.toLocalDate(), 0L);
 			case WEEK -> usage.usesByWeek.getOrDefault(periodKey(period, now), 0L);
@@ -101,8 +105,10 @@ public final class Member {
 	public long getUsageCount(int classLevel, UsagePeriod period, LocalDateTime now) {
 		if (classLevel < 1 || classLevel > 2)
 			throw new IllegalArgumentException("Class level must be 1 or 2");
+
 		Objects.requireNonNull(period);
 		Objects.requireNonNull(now);
+
 		return usageRecords.stream()
 				.filter(record -> record.getService().getClassLevel() == classLevel)
 				.filter(record -> periodKey(period, record.getDateTime()).equals(periodKey(period, now)))
@@ -112,6 +118,7 @@ public final class Member {
 	public int getUsageDaysInWeek(Service service, LocalDateTime now) {
 		Objects.requireNonNull(service);
 		Objects.requireNonNull(now);
+
 		return existingUsage(service).daysByWeek
 				.getOrDefault(periodKey(UsagePeriod.WEEK, now), Collections.emptySet()).size();
 	}
@@ -142,11 +149,13 @@ public final class Member {
 
 	public Optional<UsageRecord> getLastUsageRecord(Service service) {
 		Objects.requireNonNull(service);
+
 		for (int index = usageRecords.size() - 1; index >= 0; index--) {
 			UsageRecord record = usageRecords.get(index);
 			if (record.getService().equals(service))
 				return Optional.of(record);
 		}
+
 		return Optional.empty();
 	}
 
@@ -158,6 +167,7 @@ public final class Member {
 		pendingShower = null;
 		activeService = service;
 		activeUntil = now.plus(duration);
+
 		usageRecords.add(new UsageRecord(service, equipmentName, now, duration));
 		usage(service).record(now, duration);
 	}
@@ -165,6 +175,7 @@ public final class Member {
 	public void scheduleShowerExtra(int equipmentId, Service service, LocalDateTime initialPhaseEnd,
 			ShowerContinuation continuation) {
 		Duration extraDuration = continuation.getExtraDuration();
+
 		pendingShower = extraDuration.isZero() ? null
 				: new ShowerSession(equipmentId, service, initialPhaseEnd, continuation, extraDuration);
 	}
@@ -180,9 +191,11 @@ public final class Member {
 
 	public void activateShowerExtra(String equipmentName, LocalDateTime now) {
 		ShowerSession session = pendingShower;
+
 		pendingShower = null;
 		activeService = session.service;
 		activeUntil = now.plus(session.extraDuration);
+
 		usageRecords.add(new UsageRecord(session.service, equipmentName, now, session.extraDuration));
 		usage(session.service).recordExtra(now, session.extraDuration);
 	}
@@ -207,17 +220,20 @@ public final class Member {
 		private void record(LocalDateTime now, Duration duration) {
 			LocalDate date = now.toLocalDate();
 			String week = periodKey(UsagePeriod.WEEK, now);
+
 			secondsByDay.merge(date, duration.getSeconds(), Long::sum);
 			usesByDay.merge(date, 1L, Long::sum);
 			usesByWeek.merge(week, 1L, Long::sum);
 			usesByMonth.merge(periodKey(UsagePeriod.MONTH, now), 1L, Long::sum);
 			daysByWeek.computeIfAbsent(week, ignored -> new HashSet<>()).add(date);
+
 			lastUse = now;
 		}
 
 		private void recordExtra(LocalDateTime now, Duration duration) {
 			LocalDate date = now.toLocalDate();
 			String week = periodKey(UsagePeriod.WEEK, now);
+
 			secondsByDay.merge(date, duration.getSeconds(), Long::sum);
 			daysByWeek.computeIfAbsent(week, ignored -> new HashSet<>()).add(date);
 		}

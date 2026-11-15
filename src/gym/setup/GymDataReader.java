@@ -18,6 +18,7 @@ final class GymDataReader {
 		if (!Files.isRegularFile(path))
 			throw ConfigValidation.configurationError("Gym data file not found: " + path.toAbsolutePath()
 					+ ". Run the application with the project root as its working directory.");
+
 		try (Reader reader = Files.newBufferedReader(path)) {
 			return readData(reader, path);
 		} catch (JsonParseException e) {
@@ -32,6 +33,7 @@ final class GymDataReader {
 		GymData data = GSON.fromJson(reader, GymData.class);
 		if (data == null)
 			throw ConfigValidation.configurationError("Gym data file is empty: " + path.toAbsolutePath());
+
 		return data;
 	}
 }
