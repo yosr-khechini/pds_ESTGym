@@ -1,12 +1,9 @@
 package gym.equipment;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
-import gym.model.Member;
-import gym.model.Service;
 import gym.plan.PlanRule;
 
 public final class DurationPolicies {
