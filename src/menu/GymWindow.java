@@ -5,13 +5,22 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import pds.util.SimulatedClock;
+import gym.equipment.Equipment;
+import gym.model.AccessResult;
+import gym.model.Gym;
+import gym.model.Member;
+import gym.model.Service;
+import gym.model.UsageRecord;
+import gym.plan.PlanRule;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Window that simulates one of the ESTgym gyms
@@ -29,6 +38,8 @@ public class GymWindow extends JFrame {
 
     // Date and time format to use in the display
     private static final DateTimeFormatter FORMATO_DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    private final Gym gym;
 
     // Graphical elements
     private final DefaultListModel<Integer> memberModel = new DefaultListModel<>();
@@ -52,8 +63,9 @@ public class GymWindow extends JFrame {
     private final PainelBotoes painelBotoes = new PainelBotoes();
     private final Map<Integer, JButton> botoes = new LinkedHashMap<>();
 
-    public GymWindow() {
+    public GymWindow(Gym gym) {
         super("ESTGym");
+        this.gym = Objects.requireNonNull(gym);
         setupInterface();
         // Create the timer to update the buttons states
         new Timer(PERIODO_ATUALIZACAO_MS, e -> updateButtons()).start();
@@ -61,10 +73,8 @@ public class GymWindow extends JFrame {
 
     /** loads the list of all members. */
     private void loadMembers() {
-        // TODO: for each member get its id and add them to the model
-        for (int i = 1; i <= 3; i++) {
-            memberModel.addElement(i);
-        }
+        for (Member member : gym.getMembers())
+            memberModel.addElement(member.getId());
     }
 
     /**
@@ -74,10 +84,6 @@ public class GymWindow extends JFrame {
      * @param icons array with the icons for free ([0]) and busy ([1])
      */
     public void addEquipment(int id, Icon icons[]) {
-        // TODO use the correct information
-        String name = "Equipment X";
-        boolean available = true;
-
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(() -> addEquipment(id, icons));
             return;
@@ -85,6 +91,12 @@ public class GymWindow extends JFrame {
         if (botoes.containsKey(id)) {
             return; // already exists
         }
+        Equipment equipment = gym.getEquipment(id);
+        if (equipment == null)
+            throw new IllegalArgumentException("Unknown equipment id: " + id);
+        if (icons == null || icons.length < 2)
+            throw new IllegalArgumentException("Free and busy icons are required");
+
         Icon iconReady = icons[0];
         Icon iconBusy = icons[1];
 
@@ -100,9 +112,9 @@ public class GymWindow extends JFrame {
         button.setDisabledIcon(redimensionarIcon(iconBusy));
 
         // Hint with the equipment name
-        button.setToolTipText(name);
+        button.setToolTipText(equipment.getName());
 
-        button.setEnabled(available);
+        button.setEnabled(!equipment.isBusy());
         button.addActionListener(e -> useEquipment(id, button));
 
         botoes.put(id, button);
@@ -118,20 +130,24 @@ public class GymWindow extends JFrame {
      * @param source      the pressed button
      */
     protected void useEquipment(int equipmentId, JButton source) {
-        // TODO: ask for the member that is trying to use the equipment
-        Object m = requestMemberId(source);
-        if (m == null)
+        Member member = requestMemberId(source);
+        if (member == null)
             return;
 
-        // TODO can the equipment be used?
-        if (Math.abs(2) == -2) {
-            // TODO if so, use it
-            botoes.get(equipmentId).setEnabled(false);
-        } else {
-            // otherwise inform that he/she cannot use the equipment
-            JOptionPane.showMessageDialog(source, "You cannot use this equipment!", "Unauthorized usage",
-                    JOptionPane.ERROR_MESSAGE);
+        Equipment equipment = gym.getEquipment(equipmentId);
+        AccessResult result = gym.accessEquipment(equipmentId, member.getId());
+        String message = result.getMessage();
+        if (result.isAllowed()) {
+            Duration duration = result.getDuration().orElse(Duration.ZERO);
+            message = member.getName() + " may use " + equipment.getName() + " for "
+                    + formatDuration(duration) + ".";
         }
+        JOptionPane.showMessageDialog(source, message,
+                result.isAllowed() ? "Authorized usage" : "Unauthorized usage",
+                result.isAllowed() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+        updateButtons();
+        if (memberList.getSelectedValue() != null && memberList.getSelectedValue() == member.getId())
+            updateTables(member.getId());
     }
 
     /**
@@ -140,21 +156,24 @@ public class GymWindow extends JFrame {
      * @param source button that was pressed (to center the error message)
      * @return the identified member, or null if no such member exists
      */
-    private Object requestMemberId(JButton source) {
-        Object m = null;
+    private Member requestMemberId(JButton source) {
+        String code = JOptionPane.showInputDialog(source, "Member id?");
+        if (code == null)
+            return null;
+
+        int id;
         try {
-            String code = JOptionPane.showInputDialog(source, "Member id?");
-            int id = Integer.parseInt(code);
-
-            // TODO retrieve the member with the given id, if any exists
-
-        } catch (Exception e) {
-            // many exceptions may arise, this catches them all
+            id = Integer.parseInt(code.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(source, "Enter a valid member number.", "Invalid id",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
         }
-        // If no member exists (or another error occurs) inform the user
-        if (m == null)
-            JOptionPane.showMessageDialog(source, "Unknown id!");
-        return m;
+
+        Member member = gym.getMember(id);
+        if (member == null)
+            JOptionPane.showMessageDialog(source, "Unknown id!", "Unknown member", JOptionPane.ERROR_MESSAGE);
+        return member;
     }
 
     /**
@@ -168,8 +187,8 @@ public class GymWindow extends JFrame {
                 boolean cellHasFocus) {
             int id = (int) value;
 
-            // TODO use the name of the member with the given id
-            String nome = "A Member";
+            Member member = gym.getMember(id);
+            String nome = member == null ? Integer.toString(id) : member.getName();
 
             return super.getListCellRendererComponent(list, nome, index, isSelected, cellHasFocus);
         }
@@ -183,30 +202,28 @@ public class GymWindow extends JFrame {
      * 
      * @param memberId id of the selected member
      */
-    private void updateTables(int memberId) {
+    private void updateTables(Integer memberId) {
         serviceModel.setRowCount(0);
         usesModel.setRowCount(0);
 
-        // TODO check if the id is valid, otherwise exits
-        if (Math.abs(2) == -2) {
+        if (memberId == null)
             return;
-        }
-        // TODO: for each subscribed service display its name and the corresponding plan
-        // description
-        for (int i = 0; i < 2; i++) {
-            String name = "Service name";
-            String description = "Subscribed plan";
 
-            serviceModel.addRow(new String[] { name, description });
+        Member member = gym.getMember(memberId);
+        if (member == null)
+            return;
+
+        for (Service service : gym.getServices()) {
+            PlanRule rule = member.getPlan().getRule(service);
+            if (rule != null) {
+                String description = rule.getDescription();
+                serviceModel.addRow(new String[] { service.getName(), description });
+            }
         }
 
-        // TODO For each usage record display the service name, the used equipment
-        // description and date and time of usage
-        for (int i = 0; i < 2; i++) {
-            String name = "Service name";
-            String description = "";
-            LocalDateTime dateOfUsage = SimulatedClock.getCurrentTime();
-            usesModel.addRow(new Object[] { name, description, dateOfUsage.format(FORMATO_DATA_HORA) });
+        for (UsageRecord record : member.getUsageRecords()) {
+            usesModel.addRow(new Object[] { record.getServiceName(), record.getEquipmentName(),
+                    record.getDateTime().format(FORMATO_DATA_HORA) });
         }
     }
 
@@ -214,20 +231,27 @@ public class GymWindow extends JFrame {
      * Called each second to update the state of each equipment
      */
     private void updateButtons() {
+        LocalDateTime now = SimulatedClock.getCurrentTime();
         for (Map.Entry<Integer, JButton> e : botoes.entrySet()) {
             int equipmentId = e.getKey();
             JButton source = e.getValue();
 
-            // TODO retrieve the name and the state of the equipment associated with the
-            // pressed button
-            boolean busy = false;
-            String name = "Equipment name";
-
-            if (!source.isEnabled() && !busy) {
-                source.setEnabled(true);
-            }
-            source.setToolTipText(name);
+            Equipment equipment = gym.getEquipment(equipmentId);
+            boolean busy = equipment == null || equipment.isBusy(now);
+            source.setEnabled(!busy);
+            if (equipment != null)
+                source.setToolTipText(equipment.getName());
         }
+    }
+
+    private static String formatDuration(Duration duration) {
+        long seconds = duration.getSeconds();
+        if (seconds < 60)
+            return seconds + " second(s)";
+        long minutes = seconds / 60;
+        long remainingSeconds = seconds % 60;
+        return remainingSeconds == 0 ? minutes + " minute(s)"
+                : minutes + " minute(s) " + remainingSeconds + " second(s)";
     }
 
     /**
