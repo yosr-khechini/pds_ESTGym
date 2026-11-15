@@ -22,18 +22,18 @@ final class RuleFactoryRegistry {
 	}
 
 	static PlanRule create(GymData.RuleDto dto, String context) {
-		String type = GymSetup.requireText(dto.type, context, "type");
+		String type = ConfigValidation.requireText(dto.type, context, "type");
 		RuleFactory factory = FACTORIES.get(type);
 		if (factory == null)
-			throw GymSetup.configurationError(context + " has unknown rule type '" + type + "'");
+			throw ConfigValidation.configurationError(context + " has unknown rule type '" + type + "'");
 		try {
 			return factory.create(dto, context + " rule '" + type + "'");
 		} catch (IllegalArgumentException e) {
 			if (e.getMessage() != null && e.getMessage().startsWith("Gym configuration error:"))
 				throw e;
-			throw GymSetup.configurationError(context + " rule '" + type + "': " + e.getMessage(), e);
+			throw ConfigValidation.configurationError(context + " rule '" + type + "': " + e.getMessage(), e);
 		} catch (ArithmeticException e) {
-			throw GymSetup.configurationError(context + " rule '" + type + "': " + e.getMessage(), e);
+			throw ConfigValidation.configurationError(context + " rule '" + type + "': " + e.getMessage(), e);
 		}
 	}
 
@@ -41,7 +41,7 @@ final class RuleFactoryRegistry {
 		Map<String, RuleFactory> factories = new LinkedHashMap<>();
 		factories.put("alwaysAllowed", (dto, context) -> PlanRules.alwaysAllowed());
 		factories.put("neverAllowed", (dto, context) ->
-				PlanRules.neverAllowed(GymSetup.requireText(
+				PlanRules.neverAllowed(ConfigValidation.requireText(
 						stringParameter(dto, "reason", context), context, "reason")));
 		factories.put("minutesPerDayAndDaysPerWeek", (dto, context) ->
 				PlanRules.minutesPerDayAndDaysPerWeek(
@@ -77,13 +77,13 @@ final class RuleFactoryRegistry {
 	}
 
 	private static PlanRule composite(GymData.RuleDto dto, String context, boolean all) {
-		GymSetup.require(dto.rules, context, "rules");
+		ConfigValidation.require(dto.rules, context, "rules");
 		if (dto.rules.isEmpty())
-			throw GymSetup.configurationError(context + " requires at least one nested rule");
+			throw ConfigValidation.configurationError(context + " requires at least one nested rule");
 		PlanRule[] rules = new PlanRule[dto.rules.size()];
 		for (int index = 0; index < dto.rules.size(); index++) {
 			String nestedContext = context + " rules[" + index + "]";
-			rules[index] = create(GymSetup.require(dto.rules.get(index), nestedContext, "rule"), nestedContext);
+			rules[index] = create(ConfigValidation.require(dto.rules.get(index), nestedContext, "rule"), nestedContext);
 		}
 		return all ? PlanRules.allOf(rules) : PlanRules.anyOf(rules);
 	}
@@ -95,18 +95,18 @@ final class RuleFactoryRegistry {
 	private static String stringParameter(GymData.RuleDto dto, String field, String context) {
 		JsonElement value = parameter(dto, field, context);
 		if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString())
-			throw GymSetup.configurationError(context + " parameter '" + field + "' must be a string");
+			throw ConfigValidation.configurationError(context + " parameter '" + field + "' must be a string");
 		return value.getAsString();
 	}
 
 	private static long longParameter(GymData.RuleDto dto, String field, String context) {
 		JsonElement value = parameter(dto, field, context);
 		if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber())
-			throw GymSetup.configurationError(context + " parameter '" + field + "' must be an integer");
+			throw ConfigValidation.configurationError(context + " parameter '" + field + "' must be an integer");
 		try {
 			return new BigDecimal(value.getAsString()).longValueExact();
 		} catch (NumberFormatException | ArithmeticException e) {
-			throw GymSetup.configurationError(context + " parameter '" + field + "' must be an integer", e);
+			throw ConfigValidation.configurationError(context + " parameter '" + field + "' must be an integer", e);
 		}
 	}
 
@@ -114,14 +114,15 @@ final class RuleFactoryRegistry {
 		try {
 			return Math.toIntExact(longParameter(dto, field, context));
 		} catch (ArithmeticException e) {
-			throw GymSetup.configurationError(context + " parameter '" + field + "' is outside the integer range", e);
+			throw ConfigValidation.configurationError(
+					context + " parameter '" + field + "' is outside the integer range", e);
 		}
 	}
 
 	private static JsonElement parameter(GymData.RuleDto dto, String field, String context) {
 		JsonElement value = dto.parameters == null ? null : dto.parameters.get(field);
 		if (value == null || value.isJsonNull())
-			throw GymSetup.configurationError(context + " is missing required parameter '" + field + "'");
+			throw ConfigValidation.configurationError(context + " is missing required parameter '" + field + "'");
 		return value;
 	}
 }

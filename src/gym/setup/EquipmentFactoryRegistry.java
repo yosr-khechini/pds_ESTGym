@@ -1,8 +1,11 @@
 package gym.setup;
 
 import java.time.Duration;
-import java.util.LinkedHashMap;
 import java.util.Map;
+
+import static gym.setup.ConfigValidation.configurationError;
+import static gym.setup.ConfigValidation.require;
+import static gym.setup.ConfigValidation.requireText;
 
 import gym.equipment.ClassEquipment;
 import gym.equipment.DurationPolicies;
@@ -16,84 +19,114 @@ import gym.model.Service;
 final class EquipmentFactoryRegistry {
 	@FunctionalInterface
 	private interface EquipmentFactory {
-		Equipment create(GymData.EquipmentDto dto, Service service, String context);
+		Equipment create(GymData.EquipmentDto equipmentData, Service service, String errorContext);
 	}
 
 	@FunctionalInterface
 	private interface DurationFactory {
-		DurationPolicy create(GymData.EquipmentDto dto, String context);
+		DurationPolicy create(GymData.EquipmentDto equipmentData, String errorContext);
 	}
 
-	private static final Map<String, EquipmentFactory> FACTORIES = createFactories();
-	private static final Map<String, DurationFactory> DURATION_FACTORIES = createDurationFactories();
+	private static final Map<String, EquipmentFactory> FACTORIES = Map.of(
+			"entry", EquipmentFactoryRegistry::createEntry,
+			"exit", EquipmentFactoryRegistry::createExit,
+			"standard", EquipmentFactoryRegistry::createStandard,
+			"class", EquipmentFactoryRegistry::createClass);
+	private static final Map<String, DurationFactory> DURATION_FACTORIES = Map.of(
+			"fixed", EquipmentFactoryRegistry::createFixedDurationPolicy,
+			"fromPlan", EquipmentFactoryRegistry::createPlanDurationPolicy);
 
 	private EquipmentFactoryRegistry() {
 	}
 
-	static Equipment create(GymData.EquipmentDto dto, Service service, String context) {
-		String type = GymSetup.requireText(dto.type, context, "type");
+	static Equipment create(GymData.EquipmentDto equipmentData, Service service, String errorContext) {
+		String type = requireText(equipmentData.type, errorContext, "type");
 		EquipmentFactory factory = FACTORIES.get(type);
 		if (factory == null)
-			throw GymSetup.configurationError(context + " has unknown equipment type '" + type + "'");
+			throw configurationError(errorContext + " has unknown equipment type '" + type + "'");
+		return createWithErrorHandling(factory, equipmentData, service, errorContext);
+	}
+
+	private static Equipment createWithErrorHandling(EquipmentFactory factory,
+			GymData.EquipmentDto equipmentData, Service service, String errorContext) {
 		try {
-			GymSetup.requireText(dto.iconName, context, "iconName");
-			GymSetup.require(dto.requiresInside, context, "requiresInside");
-			return factory.create(dto, service, context);
+			requireText(equipmentData.iconName, errorContext, "iconName");
+			require(equipmentData.requiresInside, errorContext, "requiresInside");
+			return factory.create(equipmentData, service, errorContext);
 		} catch (IllegalArgumentException e) {
-			if (e.getMessage() != null && e.getMessage().startsWith("Gym configuration error:"))
-				throw e;
-			throw GymSetup.configurationError(context + ": " + e.getMessage(), e);
+			throw wrapFactoryError(errorContext, e);
 		} catch (ArithmeticException e) {
-			throw GymSetup.configurationError(context + ": " + e.getMessage(), e);
+			throw wrapFactoryError(errorContext, e);
 		}
 	}
 
-	private static Map<String, EquipmentFactory> createFactories() {
-		Map<String, EquipmentFactory> factories = new LinkedHashMap<>();
-		factories.put("entry", (dto, service, context) ->
-				new EntryEquipment(required(dto.id, context, "id"), dto.name, service,
-						dto.iconName, fixedDuration(dto, context), dto.requiresInside));
-		factories.put("exit", (dto, service, context) ->
-				new ExitEquipment(required(dto.id, context, "id"), dto.name, service,
-						dto.iconName, fixedDuration(dto, context), dto.requiresInside));
-		factories.put("standard", (dto, service, context) ->
-				new StandardEquipment(required(dto.id, context, "id"), dto.name, service,
-						dto.iconName, durationPolicy(dto, context), dto.requiresInside));
-		factories.put("class", (dto, service, context) ->
-				new ClassEquipment(required(dto.id, context, "id"), dto.name, service,
-						dto.iconName, required(dto.level, context, "level"),
-						required(dto.capacity, context, "capacity"), fixedDuration(dto, context),
-						dto.requiresInside));
-		return Map.copyOf(factories);
+	private static IllegalArgumentException wrapFactoryError(String errorContext, RuntimeException error) {
+		if (error instanceof IllegalArgumentException configurationError
+				&& configurationError.getMessage() != null
+				&& configurationError.getMessage().startsWith("Gym configuration error:"))
+			return configurationError;
+		return configurationError(errorContext + ": " + error.getMessage(), error);
 	}
 
-	private static Map<String, DurationFactory> createDurationFactories() {
-		Map<String, DurationFactory> factories = new LinkedHashMap<>();
-		factories.put("fixed", (dto, context) ->
-				DurationPolicies.fixed(fixedDuration(dto, context)));
-		factories.put("fromPlan", (dto, context) -> DurationPolicies.fromPlan());
-		return Map.copyOf(factories);
+	private static Equipment createEntry(GymData.EquipmentDto equipmentData, Service service, String errorContext) {
+		return new EntryEquipment(requireId(equipmentData, errorContext), equipmentData.name, service,
+				equipmentData.iconName, fixedDuration(equipmentData, errorContext), equipmentData.requiresInside);
 	}
 
-	private static DurationPolicy durationPolicy(GymData.EquipmentDto dto, String context) {
-		GymData.DurationDto duration = GymSetup.require(dto.duration, context, "duration");
-		String type = GymSetup.requireText(duration.type, context + " duration", "type");
+	private static Equipment createExit(GymData.EquipmentDto equipmentData, Service service, String errorContext) {
+		return new ExitEquipment(requireId(equipmentData, errorContext), equipmentData.name, service,
+				equipmentData.iconName, fixedDuration(equipmentData, errorContext), equipmentData.requiresInside);
+	}
+
+	private static Equipment createStandard(GymData.EquipmentDto equipmentData, Service service,
+			String errorContext) {
+		return new StandardEquipment(requireId(equipmentData, errorContext), equipmentData.name, service,
+				equipmentData.iconName, durationPolicy(equipmentData, errorContext), equipmentData.requiresInside);
+	}
+
+	private static Equipment createClass(GymData.EquipmentDto equipmentData, Service service, String errorContext) {
+		return new ClassEquipment(requireId(equipmentData, errorContext), equipmentData.name, service,
+				equipmentData.iconName, requireLevel(equipmentData, errorContext),
+				requireCapacity(equipmentData, errorContext), fixedDuration(equipmentData, errorContext),
+				equipmentData.requiresInside);
+	}
+
+	private static int requireId(GymData.EquipmentDto equipmentData, String errorContext) {
+		return require(equipmentData.id, errorContext, "id");
+	}
+
+	private static int requireLevel(GymData.EquipmentDto equipmentData, String errorContext) {
+		return require(equipmentData.level, errorContext, "level");
+	}
+
+	private static int requireCapacity(GymData.EquipmentDto equipmentData, String errorContext) {
+		return require(equipmentData.capacity, errorContext, "capacity");
+	}
+
+	private static DurationPolicy durationPolicy(GymData.EquipmentDto equipmentData, String errorContext) {
+		GymData.DurationDto duration = require(equipmentData.duration, errorContext, "duration");
+		String type = requireText(duration.type, errorContext + " duration", "type");
 		DurationFactory factory = DURATION_FACTORIES.get(type);
 		if (factory == null)
-			throw GymSetup.configurationError(context + " has unknown duration type '" + type + "'");
-		return factory.create(dto, context + " duration");
+			throw configurationError(errorContext + " has unknown duration type '" + type + "'");
+		return factory.create(equipmentData, errorContext + " duration");
 	}
 
-	private static Duration fixedDuration(GymData.EquipmentDto dto, String context) {
-		GymData.DurationDto duration = GymSetup.require(dto.duration, context, "duration");
-		String type = GymSetup.requireText(duration.type, context + " duration", "type");
+	private static DurationPolicy createFixedDurationPolicy(GymData.EquipmentDto equipmentData,
+			String errorContext) {
+		return DurationPolicies.fixed(fixedDuration(equipmentData, errorContext));
+	}
+
+	private static DurationPolicy createPlanDurationPolicy(GymData.EquipmentDto equipmentData, String errorContext) {
+		return DurationPolicies.fromPlan();
+	}
+
+	private static Duration fixedDuration(GymData.EquipmentDto equipmentData, String errorContext) {
+		GymData.DurationDto duration = require(equipmentData.duration, errorContext, "duration");
+		String type = requireText(duration.type, errorContext + " duration", "type");
 		if (!"fixed".equals(type))
-			throw GymSetup.configurationError(context + " requires a fixed duration, not '" + type + "'");
-		Long seconds = GymSetup.require(duration.seconds, context + " duration", "seconds");
+			throw configurationError(errorContext + " requires a fixed duration, not '" + type + "'");
+		Long seconds = require(duration.seconds, errorContext + " duration", "seconds");
 		return Duration.ofSeconds(seconds);
-	}
-
-	private static <T> T required(T value, String context, String field) {
-		return GymSetup.require(value, context, field);
 	}
 }

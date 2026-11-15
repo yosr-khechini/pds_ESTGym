@@ -1,16 +1,10 @@
 package gym.setup;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 
 import gym.equipment.Equipment;
 import gym.model.Gym;
@@ -21,146 +15,151 @@ import gym.plan.PlanRule;
 
 public final class GymSetup {
 	private static final Path DATA_FILE = Path.of("gym-data.json");
-	private static final Gson GSON = new Gson();
 
 	private GymSetup() {
 	}
 
 	public static Gym createTestGym() {
-		GymData data = readData();
+		GymData data = GymDataReader.read(DATA_FILE);
 		validateTopLevel(data);
-
 		Gym gym = new Gym("ESTGym");
-		Map<String, Service> services = new HashMap<>();
-		for (int index = 0; index < data.services.size(); index++) {
-			String context = "services[" + index + "]";
-			GymData.ServiceDto dto = require(data.services.get(index), context, "service");
-			requireText(dto.id, context, "id");
-			requireText(dto.name, context, "name");
-			Service service;
-			try {
-				service = new Service(dto.id, dto.name, dto.classLevel == null ? 0 : dto.classLevel);
-			} catch (IllegalArgumentException e) {
-				throw configurationError(context + " service '" + dto.id + "': " + e.getMessage(), e);
-			}
-			if (services.putIfAbsent(dto.id, service) != null)
-				throw configurationError(context + " duplicates service '" + dto.id + "'");
-			gym.addService(service);
-		}
-
-		Map<Integer, GymData.MemberDto> memberData = new HashMap<>();
-		for (int index = 0; index < data.members.size(); index++) {
-			String context = "members[" + index + "]";
-			GymData.MemberDto dto = require(data.members.get(index), context, "member");
-			require(dto.id, context, "id");
-			requireText(dto.name, context, "name");
-			if (dto.id <= 0)
-				throw configurationError(context + " member '" + dto.name + "' must have a positive ID");
-			if (memberData.putIfAbsent(dto.id, dto) != null)
-				throw configurationError(context + " duplicates member ID " + dto.id);
-		}
-
-		Map<Integer, GymData.PlanDto> plans = new HashMap<>();
-		for (int index = 0; index < data.plans.size(); index++) {
-			String context = "plans[" + index + "]";
-			GymData.PlanDto dto = require(data.plans.get(index), context, "plan");
-			require(dto.memberId, context, "memberId");
-			GymData.MemberDto member = memberData.get(dto.memberId);
-			if (member == null)
-				throw configurationError(context + " references unknown member ID " + dto.memberId);
-			if (plans.putIfAbsent(dto.memberId, dto) != null)
-				throw configurationError(context + " duplicates the plan for member '" + member.name + "'");
-			require(dto.rules, context + " for member '" + member.name + "'", "rules");
-		}
-
-		for (GymData.MemberDto memberDto : data.members) {
-			GymData.PlanDto planDto = plans.get(memberDto.id);
-			if (planDto == null)
-				throw configurationError("Member '" + memberDto.name + "' (ID " + memberDto.id
-						+ ") has no plan in plans");
-			GymPlan plan = new GymPlan(memberDto.name);
-			Set<String> ruleServices = new HashSet<>();
-			for (int ruleIndex = 0; ruleIndex < planDto.rules.size(); ruleIndex++) {
-				String context = "member '" + memberDto.name + "' (ID " + memberDto.id
-						+ "), plans rule[" + ruleIndex + "]";
-				GymData.RuleDto ruleDto = require(planDto.rules.get(ruleIndex), context, "rule");
-				requireText(ruleDto.service, context, "service");
-				Service service = services.get(ruleDto.service);
-				if (service == null)
-					throw configurationError(context + " references unknown service '" + ruleDto.service + "'");
-				if (!ruleServices.add(ruleDto.service))
-					throw configurationError(context + " duplicates service rule '" + ruleDto.service + "'");
-				PlanRule rule = RuleFactoryRegistry.create(ruleDto,
-						context + ", service '" + ruleDto.service + "'");
-				plan.addRule(service, rule);
-			}
-			gym.addPlan(plan);
-			gym.addMember(new Member(memberDto.id, memberDto.name, "CARD-" + memberDto.id, plan));
-		}
-
-		Set<Integer> equipmentIds = new HashSet<>();
-		for (int index = 0; index < data.equipment.size(); index++) {
-			String context = "equipment[" + index + "]";
-			GymData.EquipmentDto dto = require(data.equipment.get(index), context, "equipment");
-			require(dto.id, context, "id");
-			requireText(dto.name, context, "name");
-			requireText(dto.service, context, "service");
-			if (!equipmentIds.add(dto.id))
-				throw configurationError(context + " equipment '" + dto.name
-						+ "' duplicates equipment ID " + dto.id);
-			Service service = services.get(dto.service);
-			if (service == null)
-				throw configurationError(context + " equipment '" + dto.name
-						+ "' references unknown service '" + dto.service + "'");
-			Equipment equipment = EquipmentFactoryRegistry.create(dto, service,
-					context + " equipment '" + dto.name + "'");
-			gym.addEquipment(equipment);
-		}
-
+		Map<String, Service> services = loadServices(data, gym);
+		Map<Integer, GymData.MemberDto> members = indexMembers(data);
+		Map<Integer, GymData.PlanDto> plans = indexPlans(data, members);
+		loadMembersWithPlans(gym, data, plans, services);
+		loadEquipment(gym, data, services);
 		return gym;
 	}
 
-	private static GymData readData() {
-		if (!Files.isRegularFile(DATA_FILE))
-			throw configurationError("Gym data file not found: " + DATA_FILE.toAbsolutePath()
-					+ ". Run the application with the project root as its working directory.");
-		try (Reader reader = Files.newBufferedReader(DATA_FILE)) {
-			GymData data = GSON.fromJson(reader, GymData.class);
-			if (data == null)
-				throw configurationError("Gym data file is empty: " + DATA_FILE.toAbsolutePath());
-			return data;
-		} catch (JsonParseException e) {
-			throw configurationError("Invalid JSON in " + DATA_FILE + ": " + e.getMessage(), e);
-		} catch (IOException e) {
-			throw configurationError("Could not read gym data file " + DATA_FILE + ": " + e.getMessage(), e);
+	private static Map<String, Service> loadServices(GymData data, Gym gym) {
+		Map<String, Service> services = new HashMap<>();
+		for (int index = 0; index < data.services.size(); index++) {
+			String context = "services[" + index + "]";
+			GymData.ServiceDto dto = ConfigValidation.require(data.services.get(index), context, "service");
+			Service service = createService(dto, context);
+			if (services.putIfAbsent(dto.id, service) != null)
+				throw ConfigValidation.configurationError(context + " duplicates service '" + dto.id + "'");
+			gym.addService(service);
+		}
+		return services;
+	}
+
+	private static Service createService(GymData.ServiceDto dto, String context) {
+		ConfigValidation.requireText(dto.id, context, "id");
+		ConfigValidation.requireText(dto.name, context, "name");
+		try {
+			return new Service(dto.id, dto.name, dto.classLevel == null ? 0 : dto.classLevel);
+		} catch (IllegalArgumentException e) {
+			throw ConfigValidation.configurationError(context + " service '" + dto.id + "': " + e.getMessage(), e);
 		}
 	}
 
+	private static Map<Integer, GymData.MemberDto> indexMembers(GymData data) {
+		Map<Integer, GymData.MemberDto> members = new HashMap<>();
+		for (int index = 0; index < data.members.size(); index++)
+			indexMember(data.members.get(index), index, members);
+		return members;
+	}
+
+	private static void indexMember(GymData.MemberDto dto, int index, Map<Integer, GymData.MemberDto> members) {
+		String context = "members[" + index + "]";
+		ConfigValidation.require(dto, context, "member");
+		ConfigValidation.require(dto.id, context, "id");
+		ConfigValidation.requireText(dto.name, context, "name");
+		if (dto.id <= 0)
+			throw ConfigValidation.configurationError(context + " member '" + dto.name + "' must have a positive ID");
+		if (members.putIfAbsent(dto.id, dto) != null)
+			throw ConfigValidation.configurationError(context + " duplicates member ID " + dto.id);
+	}
+
+	private static Map<Integer, GymData.PlanDto> indexPlans(GymData data,
+			Map<Integer, GymData.MemberDto> members) {
+		Map<Integer, GymData.PlanDto> plans = new HashMap<>();
+		for (int index = 0; index < data.plans.size(); index++)
+			indexPlan(data.plans.get(index), index, members, plans);
+		return plans;
+	}
+
+	private static void indexPlan(GymData.PlanDto dto, int index, Map<Integer, GymData.MemberDto> members,
+			Map<Integer, GymData.PlanDto> plans) {
+		String context = "plans[" + index + "]";
+		ConfigValidation.require(dto, context, "plan");
+		ConfigValidation.require(dto.memberId, context, "memberId");
+		GymData.MemberDto member = members.get(dto.memberId);
+		if (member == null)
+			throw ConfigValidation.configurationError(context + " references unknown member ID " + dto.memberId);
+		if (plans.putIfAbsent(dto.memberId, dto) != null)
+			throw ConfigValidation.configurationError(context + " duplicates the plan for member '" + member.name + "'");
+		ConfigValidation.require(dto.rules, context + " for member '" + member.name + "'", "rules");
+	}
+
+	private static void loadMembersWithPlans(Gym gym, GymData data, Map<Integer, GymData.PlanDto> plans,
+			Map<String, Service> services) {
+		for (GymData.MemberDto member : data.members)
+			loadMemberWithPlan(gym, member, plans.get(member.id), services);
+	}
+
+	private static void loadMemberWithPlan(Gym gym, GymData.MemberDto memberDto, GymData.PlanDto planDto,
+			Map<String, Service> services) {
+		if (planDto == null)
+			throw ConfigValidation.configurationError("Member '" + memberDto.name + "' (ID " + memberDto.id
+					+ ") has no plan in plans");
+		GymPlan plan = buildPlan(memberDto, planDto, services);
+		gym.addPlan(plan);
+		gym.addMember(new Member(memberDto.id, memberDto.name, "CARD-" + memberDto.id, plan));
+	}
+
+	private static GymPlan buildPlan(GymData.MemberDto member, GymData.PlanDto planDto,
+			Map<String, Service> services) {
+		GymPlan plan = new GymPlan(member.name);
+		Set<String> ruleServices = new HashSet<>();
+		for (int index = 0; index < planDto.rules.size(); index++)
+			addPlanRule(plan, member, planDto.rules.get(index), index, services, ruleServices);
+		return plan;
+	}
+
+	private static void addPlanRule(GymPlan plan, GymData.MemberDto member, GymData.RuleDto ruleDto, int ruleIndex,
+			Map<String, Service> services, Set<String> ruleServices) {
+		String context = "member '" + member.name + "' (ID " + member.id + "), plans rule[" + ruleIndex + "]";
+		ConfigValidation.require(ruleDto, context, "rule");
+		ConfigValidation.requireText(ruleDto.service, context, "service");
+		Service service = services.get(ruleDto.service);
+		if (service == null)
+			throw ConfigValidation.configurationError(context + " references unknown service '" + ruleDto.service + "'");
+		if (!ruleServices.add(ruleDto.service))
+			throw ConfigValidation.configurationError(context + " duplicates service rule '" + ruleDto.service + "'");
+		PlanRule rule = RuleFactoryRegistry.create(ruleDto, context + ", service '" + ruleDto.service + "'");
+		plan.addRule(service, rule);
+	}
+
+	private static void loadEquipment(Gym gym, GymData data, Map<String, Service> services) {
+		Set<Integer> equipmentIds = new HashSet<>();
+		for (int index = 0; index < data.equipment.size(); index++)
+			loadEquipmentItem(gym, data.equipment.get(index), index, services, equipmentIds);
+	}
+
+	private static void loadEquipmentItem(Gym gym, GymData.EquipmentDto dto, int index,
+			Map<String, Service> services, Set<Integer> equipmentIds) {
+		String context = "equipment[" + index + "]";
+		ConfigValidation.require(dto, context, "equipment");
+		ConfigValidation.require(dto.id, context, "id");
+		ConfigValidation.requireText(dto.name, context, "name");
+		ConfigValidation.requireText(dto.service, context, "service");
+		if (!equipmentIds.add(dto.id))
+			throw ConfigValidation.configurationError(context + " equipment '" + dto.name
+					+ "' duplicates equipment ID " + dto.id);
+		Service service = services.get(dto.service);
+		if (service == null)
+			throw ConfigValidation.configurationError(context + " equipment '" + dto.name
+					+ "' references unknown service '" + dto.service + "'");
+		Equipment equipment = EquipmentFactoryRegistry.create(dto, service, context + " equipment '" + dto.name + "'");
+		gym.addEquipment(equipment);
+	}
+
 	private static void validateTopLevel(GymData data) {
-		require(data.members, "root", "members");
-		require(data.services, "root", "services");
-		require(data.equipment, "root", "equipment");
-		require(data.plans, "root", "plans");
-	}
-
-	static <T> T require(T value, String context, String field) {
-		if (value == null)
-			throw configurationError(context + " is missing required field '" + field + "'");
-		return value;
-	}
-
-	static String requireText(String value, String context, String field) {
-		require(value, context, field);
-		if (value.isBlank())
-			throw configurationError(context + " has an empty required field '" + field + "'");
-		return value;
-	}
-
-	static IllegalArgumentException configurationError(String message) {
-		return new IllegalArgumentException("Gym configuration error: " + message);
-	}
-
-	static IllegalArgumentException configurationError(String message, Throwable cause) {
-		return new IllegalArgumentException("Gym configuration error: " + message, cause);
+		ConfigValidation.require(data.members, "root", "members");
+		ConfigValidation.require(data.services, "root", "services");
+		ConfigValidation.require(data.equipment, "root", "equipment");
+		ConfigValidation.require(data.plans, "root", "plans");
 	}
 }

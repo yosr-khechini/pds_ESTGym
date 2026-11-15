@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.gson.JsonElement;
 
-final class GymData {
+public final class GymData {
 	List<MemberDto> members;
 	List<ServiceDto> services;
 	List<EquipmentDto> equipment;
