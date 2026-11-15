@@ -1,7 +1,7 @@
 package gym.setup;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.JsonElement;
 

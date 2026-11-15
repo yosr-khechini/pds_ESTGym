@@ -79,11 +79,11 @@ public class GymWindow extends JFrame {
 
     /**
      * Adds an equipment to the gym simulator
-     * 
+     *
      * @param id           equipment id
      * @param icons array with the icons for free ([0]) and busy ([1])
      */
-    public void addEquipment(int id, Icon icons[]) {
+    public void addEquipment(int id, Icon[] icons) {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(() -> addEquipment(id, icons));
             return;
@@ -125,7 +125,7 @@ public class GymWindow extends JFrame {
 
     /**
      * Method called when an equipment button is pressed
-     * 
+     *
      * @param equipmentId equipment id do equipamento
      * @param source      the pressed button
      */
@@ -152,7 +152,7 @@ public class GymWindow extends JFrame {
 
     /**
      * Request the member id (emulates the identification card swipe)
-     * 
+     *
      * @param source button that was pressed (to center the error message)
      * @return the identified member, or null if no such member exists
      */
@@ -199,7 +199,7 @@ public class GymWindow extends JFrame {
      * Updates the tables that present the services/equipment and usage records of
      * the selected member.
      * Called when a member is selected on the list
-     * 
+     *
      * @param memberId id of the selected member
      */
     private void updateTables(Integer memberId) {
@@ -274,7 +274,7 @@ public class GymWindow extends JFrame {
     /**
      * Cria a zona onde aparecem os dados dos membros, localizada no lado esquerdo
      * da janela
-     * 
+     *
      * @return a zona já criada e configurada
      */
     private JComponent createMembersZone() {
@@ -320,7 +320,7 @@ public class GymWindow extends JFrame {
 
     /**
      * Permite fixar a largura de um componente
-     * 
+     *
      * @param c       o componente a fixar a largura
      * @param largura a largura máxima
      */
@@ -332,7 +332,7 @@ public class GymWindow extends JFrame {
 
     /**
      * Cria a zona onde colcoar os botões com os equipamentos
-     * 
+     *
      * @return a zona já criada e configurada
      */
     private JComponent createButtonsZone() {

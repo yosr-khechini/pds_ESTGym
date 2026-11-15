@@ -42,13 +42,13 @@ public class StartUp {
 	/**
 	 * Lê os ficheiros com os icons para um dado equipamento
 	 * Reads the files with the icon for one equipment
-	 * 
+	 *
 	 * @param name name of the imagem that represents the equipment
 	 * @return the icons with the avaliable and occupies images
 	 */
 	private static ImageIcon[] getIcons(String name) {
 		String folder = "art/";
-		ImageIcon icons[] = { new ImageIcon(folder + name + "_livre.png"),
+		ImageIcon[] icons = { new ImageIcon(folder + name + "_livre.png"),
 				new ImageIcon(folder + name + "_ocupado.png") };
 		return icons;
 	}

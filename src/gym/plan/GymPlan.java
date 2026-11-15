@@ -1,11 +1,11 @@
 package gym.plan;
 
-import gym.model.Service;
-
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import gym.model.Service;
 
 public final class GymPlan {
 	private final String name;

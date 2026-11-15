@@ -1,7 +1,7 @@
 package gym.equipment;
 
-import java.time.LocalDateTime;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import gym.model.Member;

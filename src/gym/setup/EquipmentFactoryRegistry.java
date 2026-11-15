@@ -3,11 +3,6 @@ package gym.setup;
 import java.time.Duration;
 import java.util.Map;
 
-import static gym.setup.ConfigValidation.configurationError;
-import static gym.setup.ConfigValidation.requireInt;
-import static gym.setup.ConfigValidation.require;
-import static gym.setup.ConfigValidation.requireText;
-
 import gym.equipment.ClassEquipment;
 import gym.equipment.DurationPolicies;
 import gym.equipment.DurationPolicy;
@@ -16,6 +11,11 @@ import gym.equipment.EntryEquipment;
 import gym.equipment.ExitEquipment;
 import gym.equipment.StandardEquipment;
 import gym.model.Service;
+
+import static gym.setup.ConfigValidation.configurationError;
+import static gym.setup.ConfigValidation.require;
+import static gym.setup.ConfigValidation.requireInt;
+import static gym.setup.ConfigValidation.requireText;
 
 final class EquipmentFactoryRegistry {
 	@FunctionalInterface
