@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Map;
 
 import static gym.setup.ConfigValidation.configurationError;
+import static gym.setup.ConfigValidation.requireInt;
 import static gym.setup.ConfigValidation.require;
 import static gym.setup.ConfigValidation.requireText;
 
@@ -69,38 +70,26 @@ final class EquipmentFactoryRegistry {
 	}
 
 	private static Equipment createEntry(GymData.EquipmentDto equipmentData, Service service, String errorContext) {
-		return new EntryEquipment(requireId(equipmentData, errorContext), equipmentData.name, service,
+		return new EntryEquipment(requireInt(equipmentData.id, errorContext, "id"), equipmentData.name, service,
 				equipmentData.iconName, fixedDuration(equipmentData, errorContext), equipmentData.requiresInside);
 	}
 
 	private static Equipment createExit(GymData.EquipmentDto equipmentData, Service service, String errorContext) {
-		return new ExitEquipment(requireId(equipmentData, errorContext), equipmentData.name, service,
+		return new ExitEquipment(requireInt(equipmentData.id, errorContext, "id"), equipmentData.name, service,
 				equipmentData.iconName, fixedDuration(equipmentData, errorContext), equipmentData.requiresInside);
 	}
 
 	private static Equipment createStandard(GymData.EquipmentDto equipmentData, Service service,
 			String errorContext) {
-		return new StandardEquipment(requireId(equipmentData, errorContext), equipmentData.name, service,
+		return new StandardEquipment(requireInt(equipmentData.id, errorContext, "id"), equipmentData.name, service,
 				equipmentData.iconName, durationPolicy(equipmentData, errorContext), equipmentData.requiresInside);
 	}
 
 	private static Equipment createClass(GymData.EquipmentDto equipmentData, Service service, String errorContext) {
-		return new ClassEquipment(requireId(equipmentData, errorContext), equipmentData.name, service,
-				equipmentData.iconName, requireLevel(equipmentData, errorContext),
-				requireCapacity(equipmentData, errorContext), fixedDuration(equipmentData, errorContext),
+		return new ClassEquipment(requireInt(equipmentData.id, errorContext, "id"), equipmentData.name, service,
+				equipmentData.iconName, requireInt(equipmentData.level, errorContext, "level"),
+				requireInt(equipmentData.capacity, errorContext, "capacity"), fixedDuration(equipmentData, errorContext),
 				equipmentData.requiresInside);
-	}
-
-	private static int requireId(GymData.EquipmentDto equipmentData, String errorContext) {
-		return require(equipmentData.id, errorContext, "id");
-	}
-
-	private static int requireLevel(GymData.EquipmentDto equipmentData, String errorContext) {
-		return require(equipmentData.level, errorContext, "level");
-	}
-
-	private static int requireCapacity(GymData.EquipmentDto equipmentData, String errorContext) {
-		return require(equipmentData.capacity, errorContext, "capacity");
 	}
 
 	private static DurationPolicy durationPolicy(GymData.EquipmentDto equipmentData, String errorContext) {

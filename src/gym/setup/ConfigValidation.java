@@ -10,6 +10,10 @@ final class ConfigValidation {
 		return value;
 	}
 
+	static int requireInt(Integer value, String context, String field) {
+		return require(value, context, field);
+	}
+
 	static String requireText(String value, String context, String field) {
 		require(value, context, field);
 		if (value.isBlank())

@@ -112,7 +112,8 @@ final class RuleFactoryRegistry {
 
 	private static int intParameter(GymData.RuleDto dto, String field, String context) {
 		try {
-			return Math.toIntExact(longParameter(dto, field, context));
+			Integer value = Math.toIntExact(longParameter(dto, field, context));
+			return ConfigValidation.requireInt(value, context, field);
 		} catch (ArithmeticException e) {
 			throw ConfigValidation.configurationError(
 					context + " parameter '" + field + "' is outside the integer range", e);
