@@ -1,0 +1,1157 @@
+{
+  "members": [
+    {
+      "id": 1,
+      "name": "Vítor Virtual"
+    },
+    {
+      "id": 2,
+      "name": "Iris Irreal"
+    },
+    {
+      "id": 3,
+      "name": "Inês Inexistente"
+    },
+    {
+      "id": 4,
+      "name": "Filipe Fictício"
+    },
+    {
+      "id": 5,
+      "name": "Diogo Digital"
+    },
+    {
+      "id": 6,
+      "name": "Beatriz Bytes"
+    }
+  ],
+  "services": [
+    {
+      "id": "entry",
+      "name": "Entry"
+    },
+    {
+      "id": "exit",
+      "name": "Exit"
+    },
+    {
+      "id": "step",
+      "name": "Step class",
+      "classLevel": 1
+    },
+    {
+      "id": "cycling",
+      "name": "Cycling class",
+      "classLevel": 1
+    },
+    {
+      "id": "body-combat",
+      "name": "Body combat class",
+      "classLevel": 2
+    },
+    {
+      "id": "yoga",
+      "name": "Ioga class",
+      "classLevel": 2
+    },
+    {
+      "id": "pool",
+      "name": "Swimming pool"
+    },
+    {
+      "id": "shower",
+      "name": "Shower"
+    },
+    {
+      "id": "vitamin-drink",
+      "name": "Vitamin drink"
+    },
+    {
+      "id": "personal-trainer",
+      "name": "Personal trainer"
+    },
+    {
+      "id": "nutrition",
+      "name": "Nutrition consultation"
+    },
+    {
+      "id": "evaluation",
+      "name": "Physical evaluation"
+    },
+    {
+      "id": "massage-chair",
+      "name": "Massage chair"
+    }
+  ],
+  "plans": [
+    {
+      "memberId": 1,
+      "rules": [
+        {
+          "service": "entry",
+          "type": "minutesPerDayAndDaysPerWeek",
+          "parameters": {
+            "minutesPerDay": 60,
+            "daysPerWeek": 3
+          }
+        },
+        {
+          "service": "exit",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "step",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 1
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 1,
+                "maximumUses": 1
+              }
+            }
+          ]
+        },
+        {
+          "service": "cycling",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 1
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 1,
+                "maximumUses": 1
+              }
+            }
+          ]
+        },
+        {
+          "service": "body-combat",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "yoga",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "pool",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "shower",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "showerUsesPerDay",
+              "parameters": {
+                "usesPerDay": 1,
+                "initialMinutes": 3,
+                "extraMinutes": 2
+              }
+            },
+            {
+              "type": "shower",
+              "parameters": {
+                "initialMinutes": 3,
+                "extraMinutes": 2
+              }
+            }
+          ]
+        },
+        {
+          "service": "vitamin-drink",
+          "type": "usesPerDay",
+          "parameters": {
+            "uses": 1
+          }
+        },
+        {
+          "service": "personal-trainer",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "nutrition",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 6
+          }
+        },
+        {
+          "service": "evaluation",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 3
+          }
+        },
+        {
+          "service": "massage-chair",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        }
+      ]
+    },
+    {
+      "memberId": 2,
+      "rules": [
+        {
+          "service": "entry",
+          "type": "daysPerWeek",
+          "parameters": {
+            "maximumDays": 3
+          }
+        },
+        {
+          "service": "exit",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "step",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "cycling",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "body-combat",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "yoga",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "pool",
+          "type": "minutesPerDayAndDaysPerWeek",
+          "parameters": {
+            "minutesPerDay": 45,
+            "daysPerWeek": 2
+          }
+        },
+        {
+          "service": "shower",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "showerUsesPerDay",
+              "parameters": {
+                "usesPerDay": 1,
+                "initialMinutes": 5,
+                "extraMinutes": 2
+              }
+            },
+            {
+              "type": "shower",
+              "parameters": {
+                "initialMinutes": 5,
+                "extraMinutes": 2
+              }
+            }
+          ]
+        },
+        {
+          "service": "vitamin-drink",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "usesPerDay",
+              "parameters": {
+                "uses": 2
+              }
+            },
+            {
+              "type": "minimumInterval",
+              "parameters": {
+                "intervalMinutes": 30
+              }
+            }
+          ]
+        },
+        {
+          "service": "personal-trainer",
+          "type": "minutesPerDayAndDaysPerWeek",
+          "parameters": {
+            "minutesPerDay": 45,
+            "daysPerWeek": 3
+          }
+        },
+        {
+          "service": "nutrition",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 6
+          }
+        },
+        {
+          "service": "evaluation",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 3
+          }
+        },
+        {
+          "service": "massage-chair",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        }
+      ]
+    },
+    {
+      "memberId": 3,
+      "rules": [
+        {
+          "service": "entry",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "exit",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "step",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 1
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 1,
+                "maximumUses": 1
+              }
+            }
+          ]
+        },
+        {
+          "service": "cycling",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 1
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 1,
+                "maximumUses": 1
+              }
+            }
+          ]
+        },
+        {
+          "service": "body-combat",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "yoga",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "pool",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "shower",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "showerUsesPerDay",
+              "parameters": {
+                "usesPerDay": 1,
+                "initialMinutes": 5,
+                "extraMinutes": 2
+              }
+            },
+            {
+              "type": "shower",
+              "parameters": {
+                "initialMinutes": 5,
+                "extraMinutes": 2
+              }
+            }
+          ]
+        },
+        {
+          "service": "vitamin-drink",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "usesPerDay",
+              "parameters": {
+                "uses": 2
+              }
+            },
+            {
+              "type": "minimumInterval",
+              "parameters": {
+                "intervalMinutes": 30
+              }
+            }
+          ]
+        },
+        {
+          "service": "personal-trainer",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "nutrition",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 1
+          }
+        },
+        {
+          "service": "evaluation",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 3
+          }
+        },
+        {
+          "service": "massage-chair",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        }
+      ]
+    },
+    {
+      "memberId": 4,
+      "rules": [
+        {
+          "service": "entry",
+          "type": "daysPerWeek",
+          "parameters": {
+            "maximumDays": 3
+          }
+        },
+        {
+          "service": "exit",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "step",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 1
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 1,
+                "maximumUses": 2
+              }
+            }
+          ]
+        },
+        {
+          "service": "cycling",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 1
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 1,
+                "maximumUses": 2
+              }
+            }
+          ]
+        },
+        {
+          "service": "body-combat",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 2
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 2,
+                "maximumUses": 1
+              }
+            }
+          ]
+        },
+        {
+          "service": "yoga",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 2
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 2,
+                "maximumUses": 1
+              }
+            }
+          ]
+        },
+        {
+          "service": "pool",
+          "type": "minutesPerDayAndDaysPerWeek",
+          "parameters": {
+            "minutesPerDay": 45,
+            "daysPerWeek": 2
+          }
+        },
+        {
+          "service": "shower",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "showerUsesPerDay",
+              "parameters": {
+                "usesPerDay": 1,
+                "initialMinutes": 5,
+                "extraMinutes": 2
+              }
+            },
+            {
+              "type": "shower",
+              "parameters": {
+                "initialMinutes": 5,
+                "extraMinutes": 2
+              }
+            }
+          ]
+        },
+        {
+          "service": "vitamin-drink",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "usesPerDay",
+              "parameters": {
+                "uses": 2
+              }
+            },
+            {
+              "type": "minimumInterval",
+              "parameters": {
+                "intervalMinutes": 30
+              }
+            }
+          ]
+        },
+        {
+          "service": "personal-trainer",
+          "type": "minutesPerDayAndDaysPerWeek",
+          "parameters": {
+            "minutesPerDay": 45,
+            "daysPerWeek": 3
+          }
+        },
+        {
+          "service": "nutrition",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 6
+          }
+        },
+        {
+          "service": "evaluation",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 3
+          }
+        },
+        {
+          "service": "massage-chair",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "usesPerDay",
+              "parameters": {
+                "uses": 1
+              }
+            },
+            {
+              "type": "usesPerWeek",
+              "parameters": {
+                "uses": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "memberId": 5,
+      "rules": [
+        {
+          "service": "entry",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "exit",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "step",
+          "type": "classLevel",
+          "parameters": {
+            "maximumLevel": 1
+          }
+        },
+        {
+          "service": "cycling",
+          "type": "classLevel",
+          "parameters": {
+            "maximumLevel": 1
+          }
+        },
+        {
+          "service": "body-combat",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 2
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 2,
+                "maximumUses": 3
+              }
+            }
+          ]
+        },
+        {
+          "service": "yoga",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "classLevel",
+              "parameters": {
+                "maximumLevel": 2
+              }
+            },
+            {
+              "type": "classUsesPerWeek",
+              "parameters": {
+                "level": 2,
+                "maximumUses": 3
+              }
+            }
+          ]
+        },
+        {
+          "service": "pool",
+          "type": "minutesPerDayAndDaysPerWeek",
+          "parameters": {
+            "minutesPerDay": 60,
+            "daysPerWeek": 5
+          }
+        },
+        {
+          "service": "shower",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "showerUsesPerDay",
+              "parameters": {
+                "usesPerDay": 2,
+                "initialMinutes": 6,
+                "extraMinutes": 3
+              }
+            },
+            {
+              "type": "shower",
+              "parameters": {
+                "initialMinutes": 6,
+                "extraMinutes": 3
+              }
+            }
+          ]
+        },
+        {
+          "service": "vitamin-drink",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "usesPerDay",
+              "parameters": {
+                "uses": 4
+              }
+            },
+            {
+              "type": "minimumInterval",
+              "parameters": {
+                "intervalMinutes": 20
+              }
+            }
+          ]
+        },
+        {
+          "service": "personal-trainer",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "nutrition",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 3
+          }
+        },
+        {
+          "service": "evaluation",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 3
+          }
+        },
+        {
+          "service": "massage-chair",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "usesPerDay",
+              "parameters": {
+                "uses": 1
+              }
+            },
+            {
+              "type": "usesPerWeek",
+              "parameters": {
+                "uses": 7
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "memberId": 6,
+      "rules": [
+        {
+          "service": "entry",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "exit",
+          "type": "alwaysAllowed"
+        },
+        {
+          "service": "step",
+          "type": "classLevel",
+          "parameters": {
+            "maximumLevel": 2
+          }
+        },
+        {
+          "service": "cycling",
+          "type": "classLevel",
+          "parameters": {
+            "maximumLevel": 2
+          }
+        },
+        {
+          "service": "body-combat",
+          "type": "classLevel",
+          "parameters": {
+            "maximumLevel": 2
+          }
+        },
+        {
+          "service": "yoga",
+          "type": "classLevel",
+          "parameters": {
+            "maximumLevel": 2
+          }
+        },
+        {
+          "service": "pool",
+          "type": "neverAllowed",
+          "parameters": {
+            "reason": "This service is not included in the member's plan"
+          }
+        },
+        {
+          "service": "shower",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "showerUsesPerDay",
+              "parameters": {
+                "usesPerDay": 2,
+                "initialMinutes": 6,
+                "extraMinutes": 3
+              }
+            },
+            {
+              "type": "shower",
+              "parameters": {
+                "initialMinutes": 6,
+                "extraMinutes": 3
+              }
+            }
+          ]
+        },
+        {
+          "service": "vitamin-drink",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "usesPerDay",
+              "parameters": {
+                "uses": 4
+              }
+            },
+            {
+              "type": "minimumInterval",
+              "parameters": {
+                "intervalMinutes": 20
+              }
+            }
+          ]
+        },
+        {
+          "service": "personal-trainer",
+          "type": "minutesPerDayAndDaysPerWeek",
+          "parameters": {
+            "minutesPerDay": 60,
+            "daysPerWeek": 5
+          }
+        },
+        {
+          "service": "nutrition",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 1
+          }
+        },
+        {
+          "service": "evaluation",
+          "type": "onceEveryMonths",
+          "parameters": {
+            "months": 1
+          }
+        },
+        {
+          "service": "massage-chair",
+          "type": "allOf",
+          "rules": [
+            {
+              "type": "usesPerDay",
+              "parameters": {
+                "uses": 1
+              }
+            },
+            {
+              "type": "usesPerWeek",
+              "parameters": {
+                "uses": 3
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "equipment": [
+    {
+      "id": 1,
+      "name": "Entry door",
+      "type": "entry",
+      "service": "entry",
+      "iconName": "porta",
+      "requiresInside": false,
+      "duration": {
+        "type": "fixed",
+        "seconds": 3
+      }
+    },
+    {
+      "id": 2,
+      "name": "Exit door",
+      "type": "exit",
+      "service": "exit",
+      "iconName": "porta",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 3
+      }
+    },
+    {
+      "id": 3,
+      "name": "Step class",
+      "type": "class",
+      "service": "step",
+      "iconName": "aula",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 1800
+      },
+      "capacity": 30,
+      "level": 1
+    },
+    {
+      "id": 4,
+      "name": "Cycling class",
+      "type": "class",
+      "service": "cycling",
+      "iconName": "aula",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 3000
+      },
+      "capacity": 25,
+      "level": 1
+    },
+    {
+      "id": 5,
+      "name": "Body combat class",
+      "type": "class",
+      "service": "body-combat",
+      "iconName": "aula",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 1800
+      },
+      "capacity": 20,
+      "level": 2
+    },
+    {
+      "id": 6,
+      "name": "Ioga class",
+      "type": "class",
+      "service": "yoga",
+      "iconName": "aula",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 3600
+      },
+      "capacity": 15,
+      "level": 2
+    },
+    {
+      "id": 7,
+      "name": "Beverage dispenser",
+      "type": "standard",
+      "service": "vitamin-drink",
+      "iconName": "bebida",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 20
+      }
+    },
+    {
+      "id": 8,
+      "name": "Pool entry",
+      "type": "standard",
+      "service": "pool",
+      "iconName": "porta_piscina",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 3
+      }
+    },
+    {
+      "id": 9,
+      "name": "Shower 1",
+      "type": "standard",
+      "service": "shower",
+      "iconName": "duche",
+      "requiresInside": true,
+      "duration": {
+        "type": "fromPlan"
+      }
+    },
+    {
+      "id": 10,
+      "name": "Shower 2",
+      "type": "standard",
+      "service": "shower",
+      "iconName": "duche",
+      "requiresInside": true,
+      "duration": {
+        "type": "fromPlan"
+      }
+    },
+    {
+      "id": 11,
+      "name": "Shower 3",
+      "type": "standard",
+      "service": "shower",
+      "iconName": "duche",
+      "requiresInside": true,
+      "duration": {
+        "type": "fromPlan"
+      }
+    },
+    {
+      "id": 12,
+      "name": "Manel Mandão",
+      "type": "standard",
+      "service": "personal-trainer",
+      "iconName": "pt",
+      "requiresInside": true,
+      "duration": {
+        "type": "fromPlan"
+      }
+    },
+    {
+      "id": 13,
+      "name": "Rita Rígida",
+      "type": "standard",
+      "service": "personal-trainer",
+      "iconName": "pt",
+      "requiresInside": true,
+      "duration": {
+        "type": "fromPlan"
+      }
+    },
+    {
+      "id": 14,
+      "name": "Carlos Comilão",
+      "type": "standard",
+      "service": "nutrition",
+      "iconName": "nutricionista",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 1800
+      }
+    },
+    {
+      "id": 15,
+      "name": "Marta Magra",
+      "type": "standard",
+      "service": "nutrition",
+      "iconName": "nutricionista",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 1800
+      }
+    },
+    {
+      "id": 16,
+      "name": "Evaluation room",
+      "type": "standard",
+      "service": "evaluation",
+      "iconName": "fisica",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 1200
+      }
+    },
+    {
+      "id": 17,
+      "name": "Massage chair 1",
+      "type": "standard",
+      "service": "massage-chair",
+      "iconName": "poltrona",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 600
+      }
+    },
+    {
+      "id": 18,
+      "name": "Massage chair 2",
+      "type": "standard",
+      "service": "massage-chair",
+      "iconName": "poltrona",
+      "requiresInside": true,
+      "duration": {
+        "type": "fixed",
+        "seconds": 600
+      }
+    }
+  ]
+}

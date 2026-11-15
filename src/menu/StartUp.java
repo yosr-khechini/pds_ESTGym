@@ -3,6 +3,7 @@ package menu;
 import java.awt.Point;
 
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import gym.equipment.Equipment;
@@ -13,7 +14,14 @@ public class StartUp {
 	private static final String DEFAULT_ICON_NAME = "porta";
 
 	public static void main(String[] args) {
-		Gym gym = GymSetup.createTestGym();
+		Gym gym;
+		try {
+			gym = GymSetup.createTestGym();
+		} catch (IllegalArgumentException e) {
+			JOptionPane.showMessageDialog(null, e.getMessage(), "Gym configuration error",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		SwingUtilities.invokeLater(() -> {
 			GymWindow main = new GymWindow(gym);
